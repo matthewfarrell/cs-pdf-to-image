@@ -1,6 +1,6 @@
 ﻿// ---------------------------------------------------------------------------------------------------------------
 // Decription:
-// .Net Wrapper for the GhostScript gsdll32.dll Interpreter API
+// .Net Wrapper for the GhostScript gsdll64.dll Interpreter API
 //
 // Author:
 // Mark Redman
@@ -111,13 +111,13 @@ using System.IO;
 namespace Made4Print
 {
     /// <summary>
-    /// GhostScript DLL (gsdll32.dll) Wrapper Class
+    /// GhostScript DLL (gsdll64.dll) Wrapper Class
     /// </summary>
     public class GhostScript : IDisposable
     {
         #region Constants
 
-        const string GSDLL32 = "gsdll32.dll";
+        const string GSDLL64 = "gsdll64.dll";
         const string KERNEL32 = "kernel32";
 
         #endregion
@@ -698,7 +698,7 @@ namespace Made4Print
             e_Info = -110,                                      // Internal code for a normal exit when usage info is displayed. This allows Window versions of Ghostscript to pause until the message can be read.
             // Custom Errors
             FileTypeNotSupportedByInterpreter = -10000,         // Custom GhostScript Error: Input file type is not supported by the interpreter.
-            UnableToLoadGhostScriptDll = -10001,                // Custom GhostScript Error: Unable to load GhostScript DLL (gsdll32.dll)
+            UnableToLoadGhostScriptDll = -10001,                // Custom GhostScript Error: Unable to load GhostScript DLL (gsdll64.dll)
             GhostScriptDllNotFound = -10002                     // Custom GhostScript Error: GhostScript DLL not found in the specified Library Path
         }
 
@@ -712,25 +712,25 @@ namespace Made4Print
         [DllImport(KERNEL32)]
         private extern static bool FreeLibrary(int handle);
 
-        [DllImport(GSDLL32, EntryPoint = "gsapi_revision", CharSet = CharSet.Ansi)]
+        [DllImport(GSDLL64, EntryPoint = "gsapi_revision", CharSet = CharSet.Ansi)]
         private static extern int gsapi_revision([In, Out] gsapi_revision_t revision, int len);
 
-        [DllImport(GSDLL32, EntryPoint = "gsapi_new_instance", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.StdCall)]
+        [DllImport(GSDLL64, EntryPoint = "gsapi_new_instance", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.StdCall)]
         public static extern int gsapi_new_instance(ref IntPtr pInstance, out IntPtr pCaller);
 
-        [DllImport(GSDLL32, EntryPoint = "gsapi_delete_instance", CharSet = CharSet.Ansi)]
+        [DllImport(GSDLL64, EntryPoint = "gsapi_delete_instance", CharSet = CharSet.Ansi)]
         private static extern int gsapi_delete_instance(IntPtr pInstance);
 
-        [DllImport(GSDLL32, EntryPoint = "gsapi_exit", CharSet = CharSet.Ansi)]
+        [DllImport(GSDLL64, EntryPoint = "gsapi_exit", CharSet = CharSet.Ansi)]
         private static extern int gsapi_exit(IntPtr pInstance);
 
-        [DllImport(GSDLL32, EntryPoint = "gsapi_init_with_args", CharSet = CharSet.Ansi)]
+        [DllImport(GSDLL64, EntryPoint = "gsapi_init_with_args", CharSet = CharSet.Ansi)]
         private static extern int gsapi_init_with_args(IntPtr pInstance, int argc, [In, Out] String[] argv);
 
-        [DllImport(GSDLL32, EntryPoint = "gsapi_run_file", CharSet = CharSet.Ansi)]
+        [DllImport(GSDLL64, EntryPoint = "gsapi_run_file", CharSet = CharSet.Ansi)]
         private static extern int gsapi_run_file(IntPtr pInstance, string strFilename, int nErrors, int nExitCode);
 
-        [DllImport(GSDLL32, EntryPoint = "gsapi_set_stdio", CharSet = CharSet.Ansi)]
+        [DllImport(GSDLL64, EntryPoint = "gsapi_set_stdio", CharSet = CharSet.Ansi)]
         private static extern int gsapi_set_stdio(IntPtr pInstance, StdioMessageEventHandler gsdll_stdin, StdioMessageEventHandler gsdll_stdout, StdioMessageEventHandler gsdll_stderr);
 
         #endregion
@@ -752,7 +752,7 @@ namespace Made4Print
         public GhostScript(string libraryPath)
         {
             // Check Library Path contains GhostScript DLL
-            if (!File.Exists(Path.Combine(libraryPath, GSDLL32)))
+            if (!File.Exists(Path.Combine(libraryPath, GSDLL64)))
             {
                 System.Diagnostics.Debug.WriteLine("GhostScriptDllNotFound Exception raised");
                 throw (new GhostScriptException((int)ReturnCode.GhostScriptDllNotFound, GetGSErrorMessage((int)ReturnCode.GhostScriptDllNotFound)));
@@ -765,7 +765,7 @@ namespace Made4Print
             
             InitializePrivateMembers();
 
-            _Handle = LoadLibrary(Path.Combine(libraryPath, "gsdll32.dll"));
+            _Handle = LoadLibrary(Path.Combine(libraryPath, GSDLL64));
             System.Diagnostics.Debug.WriteLine("GhostScript Handle = " + _Handle.ToString());
         }
 
@@ -1670,8 +1670,8 @@ namespace Made4Print
                 case (int)ReturnCode.e_Info: return "Internal GhostScript code: e_Info";
                 // Custom Ghostscript errors
                 case (int)ReturnCode.FileTypeNotSupportedByInterpreter: return "GhostScript Wrapper Class error: File type not supported by the ghostscript interpreter.";
-                case (int)ReturnCode.UnableToLoadGhostScriptDll: return "GhostScript Wrapper Class error: Unable to load GhostScript DLL (gsdll32.dll).";
-                case (int)ReturnCode.GhostScriptDllNotFound: return "GhostScript Wrapper Class error: GhostScript DLL (gsdll32.dll) not found in specified library path.";
+                case (int)ReturnCode.UnableToLoadGhostScriptDll: return "GhostScript Wrapper Class error: Unable to load GhostScript DLL (gsdll64.dll).";
+                case (int)ReturnCode.GhostScriptDllNotFound: return "GhostScript Wrapper Class error: GhostScript DLL (gsdll64.dll) not found in specified library path.";
                 default: return "Unknown error.";
             }
         }

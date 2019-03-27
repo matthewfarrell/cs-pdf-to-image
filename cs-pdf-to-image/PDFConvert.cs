@@ -4,6 +4,7 @@ using System.Text;
 using System.Runtime.InteropServices;
 using System.Collections;
 using System.IO;
+using System.Linq;
 
 namespace PdfToImage
 {
@@ -20,7 +21,7 @@ namespace PdfToImage
     {
         #region Static
         /// <summary>The name of the DLL i'm using to work</summary>
-        public const string GhostScriptDLLName = "gsdll32.dll";
+        public const string GhostScriptDLLName = "gsdll64.dll";
         /// <summary>Use to check for default transformation</summary>
         /// <summary>Thanks to 	tchu_2000 to remind that u should never hardcode strings! :)</summary>
         private const string GS_OutputFileFormat = "-sOutputFile={0}";
@@ -44,6 +45,7 @@ namespace PdfToImage
         private const string GS_QuiteOperation = "-q";
         private const string GS_StandardOutputDevice = "-";
         private const string GS_MultiplePageCharacter = "%";
+        
         //Thanks to davalv for this font related options
         //http://www.codeproject.com/script/Membership/View.aspx?mid=3255201
         private const string GS_FontPath = "-sFONTPATH={0}";
@@ -81,27 +83,27 @@ namespace PdfToImage
         /// <param name="argc"></param>
         /// <param name="argv"></param>
         /// <returns></returns>
-        [DllImport("gsdll32.dll", EntryPoint="gsapi_init_with_args")]
+        [DllImport("gsdll64.dll", EntryPoint="gsapi_init_with_args")]
         private static extern int gsapi_init_with_args (IntPtr instance, int argc, IntPtr argv);
         /// <summary>
         /// Exit the interpreter. This must be called on shutdown if gsapi_init_with_args() has been called, and just before gsapi_delete_instance(). 
         /// </summary>
         /// <param name="instance"></param>
         /// <returns></returns>
-        [DllImport("gsdll32.dll", EntryPoint="gsapi_exit")]
+        [DllImport("gsdll64.dll", EntryPoint="gsapi_exit")]
         private static extern int gsapi_exit (IntPtr instance);
 
         /// <summary>
         /// Destroy an instance of Ghostscript. Before you call this, Ghostscript must have finished. If Ghostscript has been initialised, you must call gsapi_exit before gsapi_delete_instance. 
         /// </summary>
         /// <param name="instance"></param>
-        [DllImport("gsdll32.dll", EntryPoint="gsapi_delete_instance")]
+        [DllImport("gsdll64.dll", EntryPoint="gsapi_delete_instance")]
         private static extern void gsapi_delete_instance (IntPtr instance);
         /// <summary>Get info about the version of Ghostscript i'm using</summary>
         /// <param name="pGSRevisionInfo"></param>
         /// <param name="intLen"></param>
         /// <returns></returns>
-        [DllImport("gsdll32.dll", EntryPoint="gsapi_revision")]
+        [DllImport("gsdll64.dll", EntryPoint="gsapi_revision")]
         private static extern int gsapi_revision (ref GS_Revision pGSRevisionInfo , int intLen );
         /// <summary>Use a different I/O</summary>
         /// <param name="lngGSInstance"></param>
@@ -109,7 +111,7 @@ namespace PdfToImage
         /// <param name="gsdll_stdout">Function that menage the Standard OUTPUT</param>
         /// <param name="gsdll_stderr">Function that menage the Standard ERROR output</param>
         /// <returns></returns>
-        [DllImport("gsdll32.dll", EntryPoint = "gsapi_set_stdio")]
+        [DllImport("gsdll64.dll", EntryPoint = "gsapi_set_stdio")]
         private static extern int gsapi_set_stdio(IntPtr lngGSInstance, StdioCallBack gsdll_stdin, StdioCallBack gsdll_stdout, StdioCallBack gsdll_stderr);
 
         #endregion
@@ -436,8 +438,6 @@ namespace PdfToImage
             //Avoid to work when the file doesn't exist
             if (string.IsNullOrEmpty(inputFile))
                 throw new ArgumentNullException("inputFile");
-            if (!System.IO.File.Exists(inputFile))
-                throw new ArgumentException(string.Format("The file :'{0}' doesn't exist", inputFile), "inputFile");
             if (string.IsNullOrEmpty(_sDeviceFormat))
                 throw new ArgumentNullException("Device");
             //be sure that if i specify multiple page outpage i added the % to the filename!
@@ -541,19 +541,19 @@ namespace PdfToImage
                 //Check if i'm in a 64bit enviroment or a 32bit
                 if (IntPtr.Size == 8) // 8 * 8 = 64
                 {
-                    throw new ApplicationException(string.Format("The gsdll32.dll you provide is not compatible with the current architecture that is 64bit,"+
+                    throw new ApplicationException(string.Format("The gsdll64.dll you provide is not compatible with the current architecture that is 64bit,"+
                     "Please download any version above version 8.64 from the original website in the 64bit or x64 or AMD64 version!"));
                 }
                 else if (IntPtr.Size == 4) // 4 * 8 = 32
                 {
-                    throw new ApplicationException(string.Format("The gsdll32.dll you provide is not compatible with the current architecture that is 32bit,"+
+                    throw new ApplicationException(string.Format("The gsdll64.dll you provide is not compatible with the current architecture that is 32bit,"+
                     "Please download any version above version 8.64 from the original website in the 32bit or x86 or i386 version!"));
                 }
             }
             catch (DllNotFoundException )//in this case the dll we r using isn't the dll we expect
             {
                 ClearParameters(ref aGCHandle, ref gchandleArgs);
-                throw new ApplicationException("The gsdll32.dll wasn't found in default dlls search path" +
+                throw new ApplicationException("The gsdll64.dll wasn't found in default dlls search path" +
                     "or is not in correct version (doesn't expose the required methods). Please download " +
                     "at least the version 8.64 from the original website");
             }
@@ -757,6 +757,8 @@ namespace PdfToImage
                     args[i] = presetParameters[i - 1];
             }
             args[0]=GS_FirstParameter;//this parameter have little real use
+           // args = (string[])args.Where((val, i) => i != 0).ToArray();
+
             //Now check if i want to update to 1 file per page i have to be sure do add % to the output filename
             if ((_didOutputToMultipleFile) && (!outputFile.Contains(GS_MultiplePageCharacter)))
             {// Thanks to Spillie to show me the error!

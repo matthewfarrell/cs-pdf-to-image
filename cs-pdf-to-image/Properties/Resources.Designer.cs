@@ -63,9 +63,9 @@ namespace cs_pdf_to_image.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] gsdll32 {
+        internal static byte[] gsdll64 {
             get {
-                object obj = ResourceManager.GetObject("gsdll32", resourceCulture);
+                object obj = ResourceManager.GetObject("gsdll64", resourceCulture);
                 return ((byte[])(obj));
             }
         }

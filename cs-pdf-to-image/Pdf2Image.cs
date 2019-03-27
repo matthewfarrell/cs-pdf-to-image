@@ -25,6 +25,20 @@ namespace cs_pdf_to_image
             set { mPrintQuality = value; }
         }
 
+        private static string mOutputFormat = "tiff24nc";
+        public static string OutputFormat
+        {
+            get { return mOutputFormat; }
+            set { mOutputFormat = value; }
+        }
+
+        private static int mGraphicsAlphaBit = -1;
+        public static int GraphicsAlphaBit
+        {
+            get { return mGraphicsAlphaBit; }
+            set { mGraphicsAlphaBit = value; }
+        }
+
         private static string getDataPath(string relativePath)
         {
             string dataDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
@@ -62,10 +76,10 @@ namespace cs_pdf_to_image
         {
             string error = null;
             List<string> errors = new List<string>();
-            String gsPath = GetProgramFilePath("gsdll32.dll", out error);
+            String gsPath = GetProgramFilePath("gsdll64.dll", out error);
             if (!System.IO.File.Exists(gsPath))
             {
-                File.WriteAllBytes(gsPath, Properties.Resources.gsdll32);
+                File.WriteAllBytes(gsPath, Properties.Resources.gsdll64);
             }
             if (error != null) errors.Add(error);
 
@@ -88,20 +102,17 @@ namespace cs_pdf_to_image
             converter.TextAlphaBit = -1;
             converter.TextAlphaBit = -1;
 
-            converter.FitPage = true;
+            converter.FitPage = false;
             converter.JPEGQuality = mPrintQuality; //80
-            converter.OutputFormat = "png256";
+            converter.OutputFormat = mOutputFormat;
+            converter.ResolutionX = 300;
+            converter.GraphicsAlphaBit = mGraphicsAlphaBit;
 
             converter.OutputToMultipleFile = false;
             converter.FirstPageToConvert = -1;
             converter.LastPageToConvert = -1;
 
-            System.IO.FileInfo input = new FileInfo(filename);
-            if (!string.IsNullOrEmpty(mGSPath))
-            {
-                converter.GSPath = mGSPath;
-            }
-            Converted = converter.Convert(input.FullName, img_filename);
+            Converted = converter.Convert(filename, img_filename);
 
             return errors;
         }
